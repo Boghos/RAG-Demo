@@ -28,7 +28,7 @@ def index_pdf(pdf_path: str, persist_dir: str = "chroma_store"):
     
     # 2 split into chunks
     splitter = RecursiveCharacterTextSplitter(
-        chunk_size=300,
+        chunk_size=1000,
         chunk_overlap=10
     )
     chunked_docs = splitter.split_documents(docs)
@@ -51,14 +51,21 @@ def index_pdf(pdf_path: str, persist_dir: str = "chroma_store"):
 
 def create_qa_chain(vectordb):
     # create retriever
-    retriever = vectordb.as_retriever(search_kwargs={'k': 5})
+    retriever = vectordb.as_retriever(search_kwargs={'k': 20})
     
     # create LLM
     llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash-lite", temperature=0.0)
     
     # define prompt
     prompt_template = PromptTemplate.from_template(
-        "You are a helpful assistant. Use the following context to answer the question. \n\n{context}\n\nQuestion: {question}\nAnswer:"
+        """You are a helpful assistant analyzing a document. Answer the question based on the context provided.
+    If the question asks for a name or author, look for it at the end of the document (often after "Sincerely" or "Best regards").
+    
+    Context: {context}
+    
+    Question: {question}
+    
+    Answer:"""
     )
     
     # create the chain using LCEL
