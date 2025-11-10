@@ -22,29 +22,35 @@ def load_environment():
 
 
 def index_pdf(pdf_path: str, persist_dir: str = "chroma_store"):
-    # 1 load PDF
-    loader = PyPDFLoader(pdf_path)
-    docs = loader.load_and_split()
-    
-    # 2 split into chunks
-    splitter = RecursiveCharacterTextSplitter(
-        chunk_size=1000,
-        chunk_overlap=10
-    )
-    chunked_docs = splitter.split_documents(docs)
-    
-    # 3 create embeddings using Hugging Face Inference API
     embed_model = HuggingFaceEndpointEmbeddings(
         huggingfacehub_api_token=os.getenv("HUGGINGFACE_API_KEY")
     )
     
-    # 4 create or load chroma vector store
-    vectordb = Chroma.from_documents(
-        documents=chunked_docs,
-        embedding=embed_model,
-        persist_directory=persist_dir,
-        collection_name="pdf_rag_collection"
-    )
+    # Check if database already exists
+    if os.path.exists(persist_dir):
+        print("Loading existing database...")
+        vectordb = Chroma(
+            embedding_function=embed_model,
+            persist_directory=persist_dir,
+            collection_name="pdf_rag_collection"
+        )
+    else:
+        print("Creating new database...")
+        loader = PyPDFLoader(pdf_path)
+        docs = loader.load_and_split()
+        
+        splitter = RecursiveCharacterTextSplitter(
+            chunk_size=1000,
+            chunk_overlap=10
+        )
+        chunked_docs = splitter.split_documents(docs)
+        
+        vectordb = Chroma.from_documents(
+            documents=chunked_docs,
+            embedding=embed_model,
+            persist_directory=persist_dir,
+            collection_name="pdf_rag_collection"
+        )
     
     return vectordb
 
