@@ -1,0 +1,16 @@
+# Environment files
+.env
+venv/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# OS / Editor files
+.DS_Store
+.vscode/
+.idea/
+
+# Vector database storage
+chroma_store/
